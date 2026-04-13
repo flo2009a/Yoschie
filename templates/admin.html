@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RP-System – Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10; --surface: #0f1520; --surface2: #141c2a;
+    --border: #1a2535; --accent: #ff4d6d; --accent2: #00d4ff;
+    --accent3: #00e676; --accent4: #ffd600; --text: #c8d8e8;
+    --text-dim: #4a6a8a; --text-bright: #eef4ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Rajdhani', sans-serif; min-height: 100vh; display: flex; }
+
+  .sidebar {
+    width: 220px; min-height: 100vh; background: var(--surface);
+    border-right: 1px solid var(--border); display: flex; flex-direction: column;
+    position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
+  }
+  .sidebar-logo { padding: 20px 16px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo .name { font-size: 18px; font-weight: 700; letter-spacing: 3px; background: linear-gradient(135deg, var(--accent), #ff8fa0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .sidebar-logo .sub { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 3px; margin-top: 2px; }
+  .sidebar-user { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .sidebar-user .roblox { font-size: 14px; font-weight: 600; color: var(--text-bright); }
+  .role-badge { display: inline-block; font-family: 'Share Tech Mono', monospace; font-size: 9px; letter-spacing: 1px; padding: 2px 7px; margin-top: 4px; background: rgba(255,77,109,0.15); color: var(--accent); border: 1px solid rgba(255,77,109,0.3); }
+  nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+  .nav-section { padding: 8px 16px 4px; font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 3px; }
+  .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: var(--text-dim); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; border-left: 2px solid transparent; }
+  .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .nav-link.active { color: var(--accent); border-left-color: var(--accent); background: rgba(255,77,109,0.06); }
+  .sidebar-bottom { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+  .back-btn, .logout-btn { width: 100%; background: none; border: 1px solid var(--border); color: var(--text-dim); font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 2px; padding: 7px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
+  .back-btn:hover { color: var(--accent2); border-color: var(--accent2); }
+  .logout-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  .main { margin-left: 220px; flex: 1; min-height: 100vh; }
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .topbar::before { content: ''; position: absolute; bottom: 0; left: 220px; right: 0; height: 1px; background: linear-gradient(90deg, var(--accent), transparent); }
+  .topbar-title { font-size: 20px; font-weight: 700; letter-spacing: 2px; color: var(--text-bright); }
+  .role-indicator { font-family: 'Share Tech Mono', monospace; font-size: 10px; padding: 4px 12px; background: rgba(255,77,109,0.1); color: var(--accent); border: 1px solid rgba(255,77,109,0.3); letter-spacing: 2px; }
+  .content { padding: 28px; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); position: relative; overflow: hidden; margin-bottom: 20px; }
+  .panel::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, var(--accent), transparent); opacity: 0.5; }
+  .panel-header { padding: 16px 20px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .panel-title { font-size: 15px; font-weight: 700; letter-spacing: 2px; color: var(--text-bright); text-transform: uppercase; flex: 1; }
+  .panel-body { padding: 20px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+  .stat-card { background: var(--surface2); border: 1px solid var(--border); padding: 18px; }
+  .stat-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 8px; }
+  .stat-value { font-size: 28px; font-weight: 700; color: var(--text-bright); }
+  .stat-value.red { color: var(--accent); }
+  .stat-value.blue { color: var(--accent2); }
+  .stat-value.green { color: var(--accent3); }
+
+  .form-group { margin-bottom: 16px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-label { display: block; font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 6px; text-transform: uppercase; }
+  .form-input { width: 100%; background: #080c12; border: 1px solid var(--border); color: var(--text); font-family: 'Share Tech Mono', monospace; font-size: 13px; padding: 10px 12px; outline: none; transition: border-color 0.2s; }
+  .form-input:focus { border-color: var(--accent); }
+  textarea.form-input { resize: vertical; min-height: 80px; }
+  select.form-input { cursor: pointer; }
+
+  .btn { background: var(--accent); color: #fff; border: none; font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 2px; padding: 10px 20px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%); }
+  .btn:hover { opacity: 0.85; }
+  .btn.blue { background: var(--accent2); color: #000; }
+  .btn.green { background: var(--accent3); color: #000; }
+  .btn.yellow { background: var(--accent4); color: #000; }
+  .btn.sm { padding: 6px 14px; font-size: 11px; }
+
+  .account-card { background: var(--surface2); border: 1px solid var(--border); padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+  .account-card .ac-main { flex: 1; }
+  .account-card .ac-name { font-size: 15px; font-weight: 700; color: var(--text-bright); }
+  .account-card .ac-meta { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); margin-top: 3px; }
+  .banned-tag { font-family: 'Share Tech Mono', monospace; font-size: 9px; padding: 2px 6px; background: rgba(255,77,109,0.2); color: var(--accent); border: 1px solid rgba(255,77,109,0.3); }
+  .warns-tag { font-family: 'Share Tech Mono', monospace; font-size: 9px; padding: 2px 6px; background: rgba(255,214,0,0.1); color: var(--accent4); }
+
+  .mod-entry { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .mod-entry:last-child { border-bottom: none; }
+  .mod-action-warn { color: var(--accent4); }
+  .mod-action-ban { color: var(--accent); }
+  .mod-action-kick { color: #ff9100; }
+  .mod-action-note { color: var(--accent2); }
+  .mod-action-unban { color: var(--accent3); }
+
+  .alert { padding: 10px 14px; font-family: 'Share Tech Mono', monospace; font-size: 11px; margin: 10px 0; border-left: 3px solid; }
+  .alert.error { background: rgba(255,77,109,0.08); border-color: var(--accent); color: var(--accent); }
+  .alert.success { background: rgba(0,230,118,0.08); border-color: var(--accent3); color: var(--accent3); }
+  .alert.info { background: rgba(0,212,255,0.08); border-color: var(--accent2); color: var(--accent2); }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  #toast { position: fixed; bottom: 24px; right: 24px; z-index: 9999; background: var(--surface); border: 1px solid var(--border); padding: 12px 18px; font-family: 'Share Tech Mono', monospace; font-size: 12px; max-width: 300px; transform: translateY(80px); opacity: 0; transition: all 0.3s; border-left: 3px solid var(--accent3); }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.error-toast { border-left-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="name">⚙ ADMIN PANEL</div>
+    <div class="sub">NEXUS RP SYSTEM</div>
+  </div>
+  <div class="sidebar-user">
+    <div class="roblox" id="sb-roblox">–</div>
+    <div class="role-badge" id="sb-role">–</div>
+  </div>
+  <nav>
+    <div class="nav-section">ÜBERSICHT</div>
+    <div class="nav-link active" onclick="showPage('stats')"><span>📊</span> Statistiken</div>
+    <div class="nav-section">MODERATION</div>
+    <div class="nav-link" onclick="showPage('accounts')"><span>👤</span> Accounts</div>
+    <div class="nav-link" onclick="showPage('moderation')"><span>⚖️</span> Moderation</div>
+    <div class="nav-section">SPIELWELT</div>
+    <div class="nav-link" onclick="showPage('economy')"><span>💰</span> Wirtschaft</div>
+    <div class="nav-link" onclick="showPage('emergency')"><span>🚨</span> Notrufe</div>
+    <div class="nav-link" onclick="showPage('rp_events')"><span>📝</span> RP-Events</div>
+    <div class="nav-section" id="sa-section">SUPER ADMIN</div>
+    <div class="nav-link" id="sa-factions-nav" onclick="showPage('factions')"><span>🏛️</span> Fraktionen</div>
+    <div class="nav-link" id="sa-items-nav" onclick="showPage('items')"><span>🎒</span> Items</div>
+    <div class="nav-link" id="sa-server-nav" onclick="showPage('server')"><span>🖥️</span> Server</div>
+    <div class="nav-link" id="sa-events-nav" onclick="showPage('events')"><span>⚡</span> Events</div>
+    <div class="nav-link" id="sa-laws-nav" onclick="showPage('laws')"><span>📜</span> Gesetze</div>
+    <div class="nav-link" id="sa-deletes-nav" onclick="showPage('deletes')"><span>🗑️</span> Löschanträge</div>
+  </nav>
+  <div class="sidebar-bottom">
+    <button class="back-btn" onclick="location.href='/dashboard'">← Dashboard</button>
+    <button class="logout-btn" onclick="doLogout()">🔒 Logout</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">STATISTIKEN</div>
+    <div class="role-indicator" id="role-indicator">–</div>
+  </div>
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="page active" id="page-stats">
+      <div class="grid-3">
+        <div class="stat-card"><div class="stat-label">ACCOUNTS GESAMT</div><div class="stat-value blue" id="st-accounts">–</div></div>
+        <div class="stat-card"><div class="stat-label">CHARAKTERE</div><div class="stat-value blue" id="st-chars">–</div></div>
+        <div class="stat-card"><div class="stat-label">AKTIVE BANS</div><div class="stat-value red" id="st-bans">–</div></div>
+        <div class="stat-card"><div class="stat-label">OFFENE NOTRUFE</div><div class="stat-value red" id="st-calls">–</div></div>
+        <div class="stat-card"><div class="stat-label">NACHRICHTEN</div><div class="stat-value green" id="st-news">–</div></div>
+        <div class="stat-card"><div class="stat-label">RP-EVENTS</div><div class="stat-value blue" id="st-events">–</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">📢 Server-Ankündigung senden</div></div>
+        <div class="panel-body">
+          <div id="announce-alert"></div>
+          <div class="form-group"><label class="form-label">NACHRICHT</label><textarea class="form-input" id="announce-msg" placeholder="Nachricht an alle Spieler..."></textarea></div>
+          <button class="btn" onclick="sendAnnounce()">Ankündigung senden</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCOUNTS -->
+    <div class="page" id="page-accounts">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">👤 Account-Suche</div>
+        </div>
+        <div class="panel-body">
+          <div class="form-row" style="margin-bottom:16px">
+            <div class="form-group" style="margin:0"><input class="form-input" id="acc-search" placeholder="Roblox-Name suchen..." oninput="searchAccounts()"></div>
+            <div style="display:flex;gap:8px;align-items:flex-end">
+              <button class="btn sm yellow" onclick="filterAccounts('banned')">Gebannte</button>
+              <button class="btn sm" style="background:#222" onclick="filterAccounts('warns')">Mit Warns</button>
+              <button class="btn sm blue" onclick="filterAccounts('new')">Neue</button>
+              <button class="btn sm green" onclick="filterAccounts('all')">Alle</button>
+            </div>
+          </div>
+          <div id="acc-list"></div>
+        </div>
+      </div>
+
+      <!-- Role Assignment (SA only) -->
+      <div class="panel" id="role-panel" style="display:none">
+        <div class="panel-header"><div class="panel-title">🎖️ Rolle vergeben</div></div>
+        <div class="panel-body">
+          <div id="role-alert"></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">ACCOUNT-ID</label><input class="form-input" id="role-acc-id" placeholder="Account-ID"></div>
+            <div class="form-group"><label class="form-label">NEUE ROLLE</label>
+              <select class="form-input" id="role-new">
+                <option value="player">Spieler</option>
+                <option value="mod">Moderator</option>
+                <option value="admin">Admin</option>
+                <option value="superadmin">Super Admin</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn yellow" onclick="assignRole()">Rolle vergeben</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODERATION -->
+    <div class="page" id="page-moderation">
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">⚖️ Vermerk hinzufügen</div></div>
+          <div class="panel-body">
+            <div id="mod-alert"></div>
+            <div class="form-group"><label class="form-label">ACCOUNT-ID</label><input class="form-input" id="mod-acc-id" placeholder="Ziel-Account-ID"></div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">AKTION</label>
+                <select class="form-input" id="mod-action">
+                  <option value="warn">Warn</option>
+                  <option value="kick">Kick</option>
+                  <option value="note">Notiz</option>
+                  <option value="ban">Ban</option>
+                  <option value="unban">Unban</option>
+                </select>
+              </div>
+              <div class="form-group"><label class="form-label">BAN-TAGE (leer=permanent)</label><input class="form-input" type="number" id="mod-days" placeholder="z.B. 7" min="1"></div>
+            </div>
+            <div class="form-group"><label class="form-label">BEGRÜNDUNG (intern)</label><textarea class="form-input" id="mod-reason" placeholder="Nur für das Team sichtbar..."></textarea></div>
+            <button class="btn" onclick="addModeration()">Vermerk speichern</button>
+          </div>
+        </div>
+        <div>
+          <div class="panel" style="margin-bottom:20px">
+            <div class="panel-header"><div class="panel-title">📋 Moderations-Log</div></div>
+            <div class="panel-body">
+              <div class="form-row" style="margin-bottom:16px">
+                <div class="form-group" style="margin:0"><input class="form-input" id="mod-log-id" placeholder="Account-ID"></div>
+                <button class="btn blue sm" style="align-self:flex-end" onclick="loadModLog()">Log laden</button>
+              </div>
+              <div id="mod-log-list"><div style="color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:11px">Bitte Account-ID eingeben</div></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><div class="panel-title">🔑 Passwort zurücksetzen</div></div>
+            <div class="panel-body">
+              <p style="color:var(--text-dim);font-size:12px;font-family:'Share Tech Mono',monospace;margin-bottom:14px;line-height:1.6">Setzt das Passwort eines Spielers zurück. Wird automatisch im Moderations-Log eingetragen. Das neue Passwort dem Spieler direkt mitteilen.</p>
+              <div id="pw-reset-alert"></div>
+              <div class="form-group"><label class="form-label">ACCOUNT-ID</label><input class="form-input" id="pw-reset-acc-id" placeholder="Account-ID des Spielers"></div>
+              <div class="form-group"><label class="form-label">NEUES PASSWORT</label><input class="form-input" type="text" id="pw-reset-new" placeholder="mind. 6 Zeichen"></div>
+              <button class="btn yellow" onclick="adminResetPassword()">🔑 Passwort zurücksetzen</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ECONOMY (Admin) -->
+    <div class="page" id="page-economy">
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">💰 Geld anpassen</div></div>
+          <div class="panel-body">
+            <div id="econ-alert"></div>
+            <div class="form-group"><label class="form-label">CHARAKTER-ID</label><input class="form-input" id="econ-char-id" placeholder="Charakter-ID"></div>
+            <div class="form-group"><label class="form-label">BETRAG (negativ=abziehen)</label><input class="form-input" type="number" id="econ-amount" placeholder="z.B. 500 oder -100"></div>
+            <div class="form-group"><label class="form-label">NOTIZ</label><input class="form-input" id="econ-note" placeholder="Grund..."></div>
+            <button class="btn green" onclick="adjustEconomy()">Anpassen</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">🏦 Bank-Event</div></div>
+          <div class="panel-body">
+            <div id="bank-alert"></div>
+            <p style="color:var(--text-dim);font-size:13px;margin-bottom:16px">Bankraub-Event: Sperrt alle Überweisungen temporär für alle Spieler.</p>
+            <div style="display:flex;gap:12px">
+              <button class="btn" onclick="setBankLock(true)">🔒 Bank SPERREN</button>
+              <button class="btn green" onclick="setBankLock(false)">🔓 Bank ÖFFNEN</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EMERGENCY (Admin) -->
+    <div class="page" id="page-emergency">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">🚨 Aktive Notrufe</div>
+          <button class="btn sm blue" onclick="loadAdminCalls()">↻ Laden</button>
+        </div>
+        <div id="admin-calls-list"><div style="padding:20px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:11px">Klicke Laden...</div></div>
+      </div>
+    </div>
+
+    <!-- RP-EVENTS -->
+    <div class="page" id="page-rp_events">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">📝 RP-Ereignis eintragen</div></div>
+        <div class="panel-body">
+          <div id="rp-alert"></div>
+          <div class="form-group"><label class="form-label">TITEL</label><input class="form-input" id="rp-title" placeholder="z.B. Bankraub – Innenstadt"></div>
+          <div class="form-group"><label class="form-label">BESCHREIBUNG</label><textarea class="form-input" id="rp-desc" placeholder="Was ist passiert?"></textarea></div>
+          <div class="form-group"><label class="form-label">BETEILIGTE CHARAKTER-IDs (kommasepariert)</label><input class="form-input" id="rp-involved" placeholder="abc123, def456"></div>
+          <button class="btn" onclick="logRPEvent()">Ereignis eintragen</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">🎯 Fahndung ausschreiben</div></div>
+        <div class="panel-body">
+          <div id="wanted-alert"></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">CHARAKTER-ID</label><input class="form-input" id="w-char-id" placeholder="Charakter-ID"></div>
+            <div class="form-group"><label class="form-label">BELOHNUNG (€)</label><input class="form-input" type="number" id="w-reward" placeholder="500"></div>
+          </div>
+          <div class="form-group"><label class="form-label">BESCHREIBUNG</label><textarea class="form-input" id="w-desc" placeholder="Verdächtig von..."></textarea></div>
+          <button class="btn yellow" onclick="issueWanted()">Fahndung ausschreiben</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FRAKTIONEN (SA) -->
+    <div class="page" id="page-factions">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">🏛️ Neue Fraktion erstellen</div></div>
+        <div class="panel-body">
+          <div id="faction-alert"></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">NAME</label><input class="form-input" id="f-name" placeholder="Polizei Miami"></div>
+            <div class="form-group"><label class="form-label">TYP</label>
+              <select class="form-input" id="f-type">
+                <option value="legal">Legal</option>
+                <option value="illegal">Illegal</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">FARBE (HEX)</label><input class="form-input" id="f-color" placeholder="#0066ff" type="color" style="height:42px;padding:4px"></div>
+            <div class="form-group"><label class="form-label">RÄNGE (kommasepariert)</label><input class="form-input" id="f-ranks" placeholder="Anwärter, Officer, Captain"></div>
+          </div>
+          <div class="form-group"><label class="form-label">BESCHREIBUNG</label><textarea class="form-input" id="f-desc" placeholder="Beschreibung der Fraktion..."></textarea></div>
+          <button class="btn blue" onclick="createFaction()">Fraktion erstellen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ITEMS (SA) -->
+    <div class="page" id="page-items">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">🎒 Globales Item erstellen</div></div>
+        <div class="panel-body">
+          <div id="item-alert"></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">NAME</label><input class="form-input" id="i-name" placeholder="Glock 17"></div>
+            <div class="form-group"><label class="form-label">KATEGORIE</label>
+              <select class="form-input" id="i-cat">
+                <option value="weapon">Waffe</option>
+                <option value="vehicle">Fahrzeug</option>
+                <option value="clothing">Kleidung</option>
+                <option value="equipment">Ausrüstung</option>
+                <option value="food">Lebensmittel</option>
+                <option value="document">Dokument</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">SELTENHEIT</label>
+              <select class="form-input" id="i-rarity">
+                <option value="common">Common</option>
+                <option value="uncommon">Uncommon</option>
+                <option value="rare">Rare</option>
+                <option value="legendary">Legendary</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">BASIS-PREIS (€)</label><input class="form-input" type="number" id="i-price" placeholder="250"></div>
+          </div>
+          <div class="form-group"><label class="form-label">BESCHREIBUNG</label><input class="form-input" id="i-desc" placeholder="Beschreibung..."></div>
+          <div style="display:flex;gap:16px;margin-bottom:16px">
+            <label style="display:flex;align-items:center;gap:6px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);cursor:pointer"><input type="checkbox" id="i-license"> WAFFENSCHEIN NÖTIG</label>
+            <label style="display:flex;align-items:center;gap:6px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);cursor:pointer"><input type="checkbox" id="i-vkey"> FAHRZEUGSCHLÜSSEL</label>
+          </div>
+          <button class="btn" onclick="createItem()">Item erstellen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SERVER SETTINGS (SA) -->
+    <div class="page" id="page-server">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">🖥️ Server-Einstellungen</div></div>
+        <div class="panel-body">
+          <div id="server-alert"></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">SERVER-NAME</label><input class="form-input" id="sv-name" placeholder="Mein RP Server"></div>
+            <div class="form-group"><label class="form-label">STARTKAPITAL (€)</label><input class="form-input" type="number" id="sv-capital" placeholder="500"></div>
+          </div>
+          <div class="form-group"><label class="form-label">BESCHREIBUNG</label><textarea class="form-input" id="sv-desc" placeholder="Server-Beschreibung..."></textarea></div>
+          <div class="form-group"><label class="form-label">REGELN</label><textarea class="form-input" id="sv-rules" placeholder="Server-Regeln..."></textarea></div>
+          <div class="form-group"><label class="form-label">STEUERSATZ (%)</label><input class="form-input" type="number" id="sv-tax" placeholder="0" min="0" max="100"></div>
+          <div style="display:flex;gap:12px;margin-bottom:16px">
+            <button class="btn green" onclick="saveServerSettings()">Einstellungen speichern</button>
+            <button class="btn sm" onclick="loadServerSettings()">Laden</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">🔧 Wartungsmodus</div></div>
+        <div class="panel-body">
+          <div id="maint-alert"></div>
+          <div class="form-group"><label class="form-label">WARTUNGS-NACHRICHT</label><input class="form-input" id="maint-msg" placeholder="Wartung läuft, bitte warte..."></div>
+          <div style="display:flex;gap:12px">
+            <button class="btn" onclick="setMaintenance(true)">⛔ WARTUNG AKTIVIEREN</button>
+            <button class="btn green" onclick="setMaintenance(false)">✅ WARTUNG DEAKTIVIEREN</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EVENTS & SCHEDULER (SA) -->
+    <div class="page" id="page-events">
+      <div class="panel" style="margin-bottom:20px">
+        <div class="panel-header"><div class="panel-title">⚡ Server-Events</div></div>
+        <div class="panel-body">
+          <div id="event-alert"></div>
+          <p style="color:var(--text-dim);font-size:13px;font-family:'Share Tech Mono',monospace;margin-bottom:18px;line-height:1.7">
+            Events sperren oder verändern bestimmte Spielfunktionen temporär. Klicke ▶ zum Starten und ⏹ zum Beenden.
+          </p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+            <div class="stat-card" style="padding:16px">
+              <div class="stat-label">🏦 BANKRAUB-EVENT</div>
+              <div style="font-size:12px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;margin:8px 0 14px;line-height:1.5">Sperrt alle Überweisungen temporär für alle Spieler.</div>
+              <div style="display:flex;gap:8px">
+                <button class="btn sm" onclick="triggerEvent('bank_robbery',true)">▶ Starten</button>
+                <button class="btn sm green" onclick="triggerEvent('bank_robbery',false)">⏹ Beenden</button>
+              </div>
+            </div>
+            <div class="stat-card" style="padding:16px">
+              <div class="stat-label">🌪️ NATURKATASTROPHE</div>
+              <div style="font-size:12px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;margin:8px 0 14px;line-height:1.5">Aktiviert Naturkatastrophen-Szenario für alle Spieler.</div>
+              <div style="display:flex;gap:8px">
+                <button class="btn sm" onclick="triggerEvent('natural_disaster',true)">▶ Starten</button>
+                <button class="btn sm green" onclick="triggerEvent('natural_disaster',false)">⏹ Beenden</button>
+              </div>
+            </div>
+            <div class="stat-card" style="padding:16px">
+              <div class="stat-label">🚔 POLIZEI-RAZZIA</div>
+              <div style="font-size:12px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;margin:8px 0 14px;line-height:1.5">Verstärkte Polizeipräsenz — Schwarzmarkt-Shops werden gesperrt.</div>
+              <div style="display:flex;gap:8px">
+                <button class="btn sm" onclick="triggerEvent('police_raid',true)">▶ Starten</button>
+                <button class="btn sm green" onclick="triggerEvent('police_raid',false)">⏹ Beenden</button>
+              </div>
+            </div>
+            <div class="stat-card" style="padding:16px">
+              <div class="stat-label">🏪 SHOP-EINBRUCH</div>
+              <div style="font-size:12px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;margin:8px 0 14px;line-height:1.5">Leert das Lager eines Shops (Admin-Aktion im RP).</div>
+              <div style="display:flex;gap:8px">
+                <button class="btn sm" onclick="triggerEvent('shop_robbery',true)">▶ Starten</button>
+                <button class="btn sm green" onclick="triggerEvent('shop_robbery',false)">⏹ Beenden</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">⏱️ Scheduler (Gehalt & Steuern)</div></div>
+        <div class="panel-body">
+          <div id="sched-alert"></div>
+          <p style="color:var(--text-dim);font-size:12px;font-family:'Share Tech Mono',monospace;margin-bottom:16px;line-height:1.6">
+            Manueller Aufruf der automatischen Prozesse. Im normalen Betrieb laufen diese automatisch ab.
+          </p>
+          <div class="form-group"><label class="form-label">STEUERSATZ FÜR MANUELLEN LAUF (%)</label><input class="form-input" type="number" id="tax-rate-run" placeholder="5" min="0" max="100" value="5" style="max-width:200px"></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn yellow" onclick="runScheduler('pay_salaries')">💰 Gehälter auszahlen</button>
+            <button class="btn sm" style="background:var(--accent2)" onclick="runScheduler('collect_taxes')">📊 Steuern einziehen</button>
+            <button class="btn sm green" onclick="runScheduler('process_deliveries')">📦 Lieferungen verarbeiten</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:20px">
+        <div class="panel-header"><div class="panel-title">🎒 Item an Charakter vergeben</div></div>
+        <div class="panel-body">
+          <div id="spawn-alert"></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">GLOBALE ITEM-ID</label><input class="form-input" id="spawn-item-id" placeholder="Item-ID aus der Item-Liste"></div>
+            <div class="form-group"><label class="form-label">CHARAKTER-ID</label><input class="form-input" id="spawn-char-id" placeholder="Ziel-Charakter-ID"></div>
+          </div>
+          <div class="form-group"><label class="form-label">ZUSTAND</label>
+            <select class="form-input" id="spawn-condition" style="max-width:200px">
+              <option value="new">Neu</option>
+              <option value="used">Gebraucht</option>
+              <option value="damaged">Beschädigt</option>
+              <option value="broken">Kaputt</option>
+            </select>
+          </div>
+          <button class="btn blue" onclick="spawnItem()">Item vergeben</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GESETZE (SA) -->
+    <div class="page" id="page-laws">
+      <div class="panel" style="margin-bottom:20px">
+        <div class="panel-header">
+          <div class="panel-title">📜 Server-Gesetzgebung</div>
+          <button class="btn sm blue" onclick="loadLawsAdmin()">↻ Laden</button>
+        </div>
+        <div class="panel-body">
+          <div id="laws-alert"></div>
+          <p style="color:var(--text-dim);font-size:12px;font-family:'Share Tech Mono',monospace;margin-bottom:14px;line-height:1.6">
+            Jede Zeile ist ein Gesetz / Strafkatalog-Eintrag. Spieler sehen diese Liste im Dashboard als Referenz.
+          </p>
+          <div class="form-group">
+            <label class="form-label">GESETZE (eine Zeile = ein Eintrag)</label>
+            <textarea class="form-input" id="laws-text" style="min-height:300px;font-size:12px;line-height:1.7" placeholder="§1 – Mord: Lebenslange Haft oder Charaktertod&#10;§2 – Raub: 500€ Strafe + 3 Tage Haft&#10;§3 – Beleidigung: Verwarnung + 50€ Strafe&#10;..."></textarea>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn green" onclick="saveLaws()">Gesetze speichern</button>
+            <button class="btn sm blue" onclick="loadLawsAdmin()">Neu laden</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">⚖️ RP-Gerichtsverfahren dokumentieren</div></div>
+        <div class="panel-body">
+          <div id="court-alert"></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">ANGEKLAGTER (CHARAKTER-ID)</label><input class="form-input" id="court-char-id" placeholder="Charakter-ID"></div>
+            <div class="form-group"><label class="form-label">TATBESTAND</label><input class="form-input" id="court-crime" placeholder="z.B. §1 Mord, §3 Raub"></div>
+          </div>
+          <div class="form-group"><label class="form-label">URTEIL</label><textarea class="form-input" id="court-verdict" placeholder="z.B. 5 Jahre Haft, 2.000€ Geldstrafe, Führerscheinentzug..."></textarea></div>
+          <div class="form-group"><label class="form-label">RICHTER / BEARBEITER</label><input class="form-input" id="court-judge" placeholder="Name oder Charakter-ID"></div>
+          <button class="btn yellow" onclick="logCourtCase()">Verfahren dokumentieren</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LÖSCHANTRÄGE (SA) -->
+    <div class="page" id="page-deletes">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">🗑️ Offene Löschanträge</div>
+          <button class="btn sm blue" onclick="loadDeleteRequests()">↻ Laden</button>
+        </div>
+        <div id="deletes-list" style="padding:20px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:11px">
+          Klicke Laden um offene Anträge zu sehen...
+        </div>
+      </div>
+      <div class="panel" style="margin-top:20px">
+        <div class="panel-header"><div class="panel-title">ℹ️ Hinweis zur Account-Löschung</div></div>
+        <div class="panel-body">
+          <p style="color:var(--text-dim);font-size:12px;font-family:'Share Tech Mono',monospace;line-height:1.7">
+            Spieler können in ihrem Profil einen <strong style="color:var(--text)">Löschantrag stellen</strong>. Dieser muss von einem Super Admin bestätigt werden.<br><br>
+            ⚠️ Die Löschung ist <strong style="color:var(--accent)">dauerhaft und kann nicht rückgängig gemacht werden</strong>. Alle Charaktere, Items, Transaktionen und Moderationsvermerke werden entfernt.<br><br>
+            Vor der Bestätigung bitte sicherstellen, dass keine laufenden RP-Ereignisse, Schulden oder offenen Ermittlungen bestehen.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let currentUser = {};
+
+async function init() {
+  const r = await fetch('/api/auth/me');
+  const d = await r.json();
+  if (!d.ok) { location.href='/'; return; }
+  currentUser = d.data;
+  if (!['mod','admin','superadmin'].includes(currentUser.role)) { location.href='/dashboard'; return; }
+  document.getElementById('sb-roblox').textContent = currentUser.roblox_name || '–';
+  const roleMap = {player:'SPIELER',mod:'MODERATOR',admin:'ADMIN',superadmin:'SUPER ADMIN'};
+  document.getElementById('sb-role').textContent = roleMap[currentUser.role]||'–';
+  document.getElementById('role-indicator').textContent = roleMap[currentUser.role]||'–';
+  // Show SA-only panels
+  const saOnly = ['sa-factions-nav','sa-items-nav','sa-server-nav','sa-events-nav','sa-laws-nav','sa-deletes-nav'];
+  if (currentUser.role === 'superadmin') {
+    document.getElementById('role-panel').style.display='';
+    document.getElementById('sa-section').style.display='';
+    saOnly.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display=''; });
+  } else {
+    document.getElementById('sa-section').style.display='none';
+    saOnly.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+  }
+  loadStats();
+  filterAccounts('all');
+  loadServerSettings();
+}
+
+const pageTitles = {stats:'STATISTIKEN',accounts:'ACCOUNT-VERWALTUNG',moderation:'MODERATION',economy:'WIRTSCHAFT',emergency:'NOTRUFE',rp_events:'RP-EVENTS',factions:'FRAKTIONEN',items:'ITEM-VERWALTUNG',server:'SERVER-EINSTELLUNGEN',events:'EVENTS & SCHEDULER',laws:'GESETZGEBUNG',deletes:'LÖSCHANTRÄGE'};
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelector(`[onclick="showPage('${p}')"]`).classList.add('active');
+  document.getElementById('page-title').textContent=pageTitles[p]||p.toUpperCase();
+  if(p==='emergency') loadAdminCalls();
+  if(p==='deletes') loadDeleteRequests();
+  if(p==='laws') loadLawsAdmin();
+}
+
+async function loadStats() {
+  const r = await fetch('/api/admin/stats');
+  const d = await r.json();
+  if (!d.ok) return;
+  const s = d.data;
+  document.getElementById('st-accounts').textContent = s.accounts||0;
+  document.getElementById('st-chars').textContent = s.characters||0;
+  document.getElementById('st-bans').textContent = s.banned_accounts||0;
+  document.getElementById('st-calls').textContent = s.open_emergency_calls||0;
+  document.getElementById('st-news').textContent = s.news_articles||0;
+  document.getElementById('st-events').textContent = s.rp_events||0;
+}
+
+async function searchAccounts() {
+  const q = document.getElementById('acc-search').value.trim();
+  if (!q) return filterAccounts('all');
+  const r = await fetch(`/api/admin/accounts/search?q=${encodeURIComponent(q)}`);
+  const d = await r.json();
+  if (d.ok) renderAccounts(d.data);
+}
+
+async function filterAccounts(type) {
+  let url = '/api/admin/accounts/filter?';
+  if (type==='banned') url+='banned=true';
+  else if (type==='warns') url+='has_warns=true';
+  else if (type==='new') url+='new_only=true';
+  const r = await fetch(url);
+  const d = await r.json();
+  if (d.ok) renderAccounts(d.data);
+}
+
+function renderAccounts(accs) {
+  const el = document.getElementById('acc-list');
+  if (!accs.length) { el.innerHTML='<div style="color:var(--text-dim);font-family:\'Share Tech Mono\',monospace;font-size:11px;padding:12px">Keine Accounts gefunden</div>'; return; }
+  el.innerHTML = accs.map(a => `
+    <div class="account-card">
+      <div class="ac-main">
+        <div class="ac-name">${esc(a.roblox_name)} ${a.is_banned?'<span class="banned-tag">GEBANNT</span>':''}</div>
+        <div class="ac-meta">ID: ${a.id} · Rolle: ${a.role} · Warns: ${a.warn_count} · Erstellt: ${fmtDate(a.created_at)}</div>
+      </div>
+      <button class="btn sm" onclick="prefillModId('${a.id}')">Vermerk</button>
+    </div>
+  `).join('');
+}
+
+function prefillModId(id) {
+  document.getElementById('mod-acc-id').value = id;
+  document.getElementById('mod-log-id').value = id;
+  document.getElementById('pw-reset-acc-id').value = id;
+  showPage('moderation');
+}
+
+async function adminResetPassword() {
+  const account_id = document.getElementById('pw-reset-acc-id').value.trim();
+  const new_password = document.getElementById('pw-reset-new').value.trim();
+  if (!account_id || !new_password) return showAlert('pw-reset-alert','Bitte Account-ID und neues Passwort angeben.','error');
+  if (new_password.length < 6) return showAlert('pw-reset-alert','Passwort muss mind. 6 Zeichen haben.','error');
+  if (!confirm('Passwort wirklich zurücksetzen? Dies wird im Moderations-Log eingetragen.')) return;
+  const r = await fetch('/api/admin/account/reset_password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({account_id,new_password})});
+  const d = await r.json();
+  if (d.ok) {
+    showAlert('pw-reset-alert','✅ Passwort zurückgesetzt! Bitte dem Spieler mitteilen: ' + new_password,'success');
+    document.getElementById('pw-reset-new').value='';
+  } else showAlert('pw-reset-alert', d.error, 'error');
+}
+
+async function addModeration() {
+  const payload = {
+    account_id: document.getElementById('mod-acc-id').value.trim(),
+    action: document.getElementById('mod-action').value,
+    reason: document.getElementById('mod-reason').value.trim(),
+    ban_days: parseInt(document.getElementById('mod-days').value)||null
+  };
+  if (!payload.account_id || !payload.reason) return showAlert('mod-alert','Bitte Account-ID und Begründung angeben.','error');
+  const r = await fetch('/api/admin/moderation/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d = await r.json();
+  if (d.ok) { showAlert('mod-alert','Vermerk gespeichert!','success'); document.getElementById('mod-reason').value=''; }
+  else showAlert('mod-alert', d.error, 'error');
+}
+
+async function loadModLog() {
+  const id = document.getElementById('mod-log-id').value.trim();
+  if (!id) return;
+  const r = await fetch(`/api/admin/moderation/log/${id}`);
+  const d = await r.json();
+  const el = document.getElementById('mod-log-list');
+  if (!d.ok || d.data.length===0) { el.innerHTML='<div style="color:var(--text-dim);font-family:\'Share Tech Mono\',monospace;font-size:11px">Keine Einträge</div>'; return; }
+  const actionColors = {warn:'mod-action-warn',ban:'mod-action-ban',kick:'mod-action-kick',note:'mod-action-note',unban:'mod-action-unban'};
+  el.innerHTML = d.data.slice().reverse().map(e=>`
+    <div class="mod-entry">
+      <div style="display:flex;justify-content:space-between">
+        <span class="${actionColors[e.action]||''}" style="font-family:'Share Tech Mono',monospace;font-size:12px;font-weight:700">${e.action.toUpperCase()}</span>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim)">${fmtDate(e.timestamp)}</span>
+      </div>
+      <div style="font-size:13px;color:var(--text);margin-top:4px">${esc(e.reason)}</div>
+      <div style="font-size:10px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;margin-top:3px">von: ${e.issued_by}</div>
+    </div>
+  `).join('');
+}
+
+async function adjustEconomy() {
+  const payload = {character_id:document.getElementById('econ-char-id').value.trim(),amount:parseFloat(document.getElementById('econ-amount').value),note:document.getElementById('econ-note').value.trim()};
+  if (!payload.character_id||isNaN(payload.amount)) return showAlert('econ-alert','Bitte Charakter-ID und Betrag angeben.','error');
+  const r = await fetch('/api/admin/economy/adjust',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d = await r.json();
+  if (d.ok) showAlert('econ-alert','Kontostand angepasst!','success');
+  else showAlert('econ-alert',d.error,'error');
+}
+
+async function setBankLock(locked) {
+  const r = await fetch('/api/admin/economy/bank_lock',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({locked})});
+  const d = await r.json();
+  if (d.ok) showAlert('bank-alert',locked?'Bank gesperrt!':'Bank wieder geöffnet!',locked?'error':'success');
+  else showAlert('bank-alert',d.error,'error');
+}
+
+async function loadAdminCalls() {
+  const r = await fetch('/api/emergency/calls');
+  const d = await r.json();
+  const el = document.getElementById('admin-calls-list');
+  if (!d.ok||d.data.length===0) { el.innerHTML='<div style="padding:20px;color:var(--text-dim);font-family:\'Share Tech Mono\',monospace;font-size:11px">Keine offenen Notrufe</div>'; return; }
+  el.innerHTML = d.data.map(c=>`
+    <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px">
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:var(--text-bright)">${callIcon(c.call_type)} ${esc(c.location)}</div>
+        <div style="font-size:12px;color:var(--text);margin:4px 0">${esc(c.description)}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim)">ID: ${c.id} · ${fmtDate(c.created_at)} · Status: ${c.status}</div>
+      </div>
+      <div>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:9px;padding:3px 8px;background:rgba(255,77,109,0.15);color:var(--accent)">${c.priority.toUpperCase()}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function logRPEvent() {
+  const involved = document.getElementById('rp-involved').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const payload = {title:document.getElementById('rp-title').value.trim(),description:document.getElementById('rp-desc').value.trim(),involved_ids:involved};
+  if (!payload.title||!payload.description) return showAlert('rp-alert','Bitte Titel und Beschreibung ausfüllen.','error');
+  const r = await fetch('/api/admin/rp/log_event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d = await r.json();
+  if (d.ok) { showAlert('rp-alert','RP-Ereignis eingetragen!','success'); document.getElementById('rp-title').value=''; document.getElementById('rp-desc').value=''; document.getElementById('rp-involved').value=''; }
+  else showAlert('rp-alert',d.error,'error');
+}
+
+async function issueWanted() {
+  const payload = {character_id:document.getElementById('w-char-id').value.trim(),description:document.getElementById('w-desc').value.trim(),reward:parseFloat(document.getElementById('w-reward').value)||0};
+  if (!payload.character_id||!payload.description) return showAlert('wanted-alert','Bitte Charakter-ID und Beschreibung angeben.','error');
+  const r = await fetch('/api/admin/wanted/issue',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d = await r.json();
+  if (d.ok) { showAlert('wanted-alert','Fahndung ausgeschrieben!','success'); }
+  else showAlert('wanted-alert',d.error,'error');
+}
+
+async function sendAnnounce() {
+  const msg = document.getElementById('announce-msg').value.trim();
+  if (!msg) return showAlert('announce-alert','Bitte Nachricht eingeben.','error');
+  const r = await fetch('/api/admin/server/announce',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});
+  const d = await r.json();
+  if (d.ok) { showAlert('announce-alert','Ankündigung gesendet!','success'); document.getElementById('announce-msg').value=''; }
+  else showAlert('announce-alert',d.error,'error');
+}
+
+async function createFaction() {
+  const ranksRaw = document.getElementById('f-ranks').value;
+  const ranks = ranksRaw ? ranksRaw.split(',').map((r,i)=>({name:r.trim(),level:i})) : [];
+  const payload = {name:document.getElementById('f-name').value.trim(),description:document.getElementById('f-desc').value.trim(),color:document.getElementById('f-color').value,faction_type:document.getElementById('f-type').value,ranks};
+  if (!payload.name) return showAlert('faction-alert','Bitte Name angeben.','error');
+  const r = await fetch('/api/admin/factions/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d = await r.json();
+  if (d.ok) { showAlert('faction-alert','Fraktion erstellt!','success'); }
+  else showAlert('faction-alert',d.error,'error');
+}
+
+async function createItem() {
+  const payload = {name:document.getElementById('i-name').value.trim(),category:document.getElementById('i-cat').value,rarity:document.getElementById('i-rarity').value,base_price:parseFloat(document.getElementById('i-price').value)||0,description:document.getElementById('i-desc').value.trim(),requires_license:document.getElementById('i-license').checked,is_vehicle_key:document.getElementById('i-vkey').checked};
+  if (!payload.name) return showAlert('item-alert','Bitte Namen angeben.','error');
+  const r = await fetch('/api/admin/items/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d = await r.json();
+  if (d.ok) { showAlert('item-alert','Item erstellt! ID: '+d.data.id,'success'); }
+  else showAlert('item-alert',d.error,'error');
+}
+
+async function loadServerSettings() {
+  const r = await fetch('/api/admin/server/settings');
+  const d = await r.json();
+  if (!d.ok) return;
+  const s = d.data;
+  const setSafe = (id,val)=>{ const el=document.getElementById(id); if(el) el.value=val||''; };
+  setSafe('sv-name', s.server_name);
+  setSafe('sv-desc', s.description);
+  setSafe('sv-rules', s.rules);
+  if (s.economy) { setSafe('sv-tax', s.economy.tax_rate); setSafe('sv-capital', s.economy.starting_capital); }
+}
+
+async function saveServerSettings() {
+  const payload = {server_name:document.getElementById('sv-name').value.trim(),description:document.getElementById('sv-desc').value.trim(),rules:document.getElementById('sv-rules').value.trim()};
+  const r = await fetch('/api/admin/server/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d = await r.json();
+  if (d.ok) showAlert('server-alert','Gespeichert!','success');
+  else showAlert('server-alert',d.error,'error');
+}
+
+async function setMaintenance(active) {
+  const msg = document.getElementById('maint-msg').value.trim() || 'Wartung läuft...';
+  const r = await fetch('/api/admin/server/maintenance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({active,message:msg})});
+  const d = await r.json();
+  if (d.ok) showAlert('maint-alert',active?'Wartungsmodus aktiviert!':'Wartungsmodus deaktiviert!',active?'error':'success');
+  else showAlert('maint-alert',d.error,'error');
+}
+
+async function assignRole() {
+  const payload = {account_id:document.getElementById('role-acc-id').value.trim(),role:document.getElementById('role-new').value};
+  if (!payload.account_id) return showAlert('role-alert','Bitte Account-ID angeben.','error');
+  const r = await fetch('/api/admin/account/set_role',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d = await r.json();
+  if (d.ok) showAlert('role-alert','Rolle vergeben!','success');
+  else showAlert('role-alert',d.error,'error');
+}
+
+
+async function triggerEvent(event_type, active) {
+  const r = await fetch('/api/admin/server/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event_type,active})});
+  const d = await r.json();
+  if (d.ok) showAlert('event-alert', (active?'▶ Event gestartet: ':'⏹ Event beendet: ')+event_type, active?'error':'success');
+  else showAlert('event-alert',d.error,'error');
+}
+
+async function runScheduler(action) {
+  const rate_percent = parseFloat(document.getElementById('tax-rate-run')?.value)||5;
+  const r = await fetch('/api/admin/scheduler/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,rate_percent})});
+  const d = await r.json();
+  if (d.ok) showAlert('sched-alert','✅ Scheduler ausgeführt: '+action,'success');
+  else showAlert('sched-alert',d.error,'error');
+}
+
+async function spawnItem() {
+  const payload = {global_item_id:document.getElementById('spawn-item-id').value.trim(),character_id:document.getElementById('spawn-char-id').value.trim(),condition:document.getElementById('spawn-condition').value};
+  if (!payload.global_item_id||!payload.character_id) return showAlert('spawn-alert','Bitte Item-ID und Charakter-ID angeben.','error');
+  const r = await fetch('/api/admin/items/spawn',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d = await r.json();
+  if (d.ok) showAlert('spawn-alert','✅ Item vergeben!','success');
+  else showAlert('spawn-alert',d.error,'error');
+}
+
+async function loadLawsAdmin() {
+  const r = await fetch('/api/admin/server/settings');
+  const d = await r.json();
+  if (d.ok && d.data.laws) {
+    document.getElementById('laws-text').value = d.data.laws.join('\n');
+  }
+}
+
+async function saveLaws() {
+  const text = document.getElementById('laws-text').value;
+  const laws = text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const r = await fetch('/api/admin/server/laws',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({laws})});
+  const d = await r.json();
+  if (d.ok) showAlert('laws-alert','✅ Gesetze gespeichert!','success');
+  else showAlert('laws-alert',d.error,'error');
+}
+
+async function logCourtCase() {
+  const payload = {
+    character_id: document.getElementById('court-char-id').value.trim(),
+    crime: document.getElementById('court-crime').value.trim(),
+    verdict: document.getElementById('court-verdict').value.trim(),
+    judge: document.getElementById('court-judge').value.trim()
+  };
+  if (!payload.character_id || !payload.verdict) return showAlert('court-alert','Bitte Charakter-ID und Urteil angeben.','error');
+  const r = await fetch('/api/admin/rp/court_case',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d = await r.json();
+  if (d.ok) {
+    showAlert('court-alert','✅ Gerichtsverfahren dokumentiert!','success');
+    document.getElementById('court-char-id').value='';
+    document.getElementById('court-crime').value='';
+    document.getElementById('court-verdict').value='';
+    document.getElementById('court-judge').value='';
+  } else showAlert('court-alert',d.error,'error');
+}
+
+async function loadDeleteRequests() {
+  const r = await fetch('/api/admin/account/pending_deletes');
+  const d = await r.json();
+  const el = document.getElementById('deletes-list');
+  if (!d.ok||d.data.length===0) { el.innerHTML='<div style="color:var(--text-dim);font-family:\'Share Tech Mono\',monospace;font-size:11px">Keine offenen Löschanträge</div>'; return; }
+  el.innerHTML = d.data.map(a=>`
+    <div class="account-card">
+      <div class="ac-main">
+        <div class="ac-name">${esc(a.roblox_name)}</div>
+        <div class="ac-meta">ID: ${a.id} · Erstellt: ${fmtDate(a.created_at)} · Antrag gestellt</div>
+      </div>
+      <button class="btn sm" onclick="confirmDelete('${a.id}')">✓ Bestätigen</button>
+    </div>
+  `).join('');
+}
+
+async function confirmDelete(account_id) {
+  if (!confirm('Account wirklich dauerhaft löschen? Dies kann nicht rückgängig gemacht werden!')) return;
+  const r = await fetch('/api/admin/account/confirm_delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({account_id})});
+  const d = await r.json();
+  if (d.ok) { showToast('Account gelöscht'); await loadDeleteRequests(); }
+  else showToast(d.error, true);
+}
+
+async function doLogout() { await fetch('/api/auth/logout',{method:'POST'}); location.href='/'; }
+
+function showAlert(id, msg, type) { const el=document.getElementById(id); if(!el) return; el.innerHTML=msg?`<div class="alert ${type}">${msg}</div>`:''; }
+function showToast(msg, isError=false) { const t=document.getElementById('toast'); t.textContent=msg; t.className='show'+(isError?' error-toast':''); clearTimeout(t._t); t._t=setTimeout(()=>t.className='',3000); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtDate(s) { if(!s) return '–'; try{return new Date(s).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch{return s;} }
+function callIcon(t) { return {police:'🚓',fire:'🚒',ems:'🚑',all:'🆘'}[t]||'📞'; }
+
+init();
+</script>
+</body>
+</html>

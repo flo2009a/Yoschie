@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RP-System – Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #0f1520;
+    --surface2: #141c2a;
+    --border: #1a2535;
+    --accent: #00d4ff;
+    --accent2: #ff4d6d;
+    --accent3: #00e676;
+    --accent4: #ffd600;
+    --text: #c8d8e8;
+    --text-dim: #4a6a8a;
+    --text-bright: #eef4ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Rajdhani', sans-serif; min-height: 100vh; display: flex; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px; min-height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    position: fixed; left: 0; top: 0; bottom: 0;
+    z-index: 100;
+  }
+  .sidebar-logo {
+    padding: 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo .name {
+    font-size: 22px; font-weight: 700; letter-spacing: 3px;
+    background: linear-gradient(135deg, #fff, var(--accent));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .sidebar-logo .sub { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 3px; margin-top: 2px; }
+  .sidebar-user {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(0,212,255,0.03);
+  }
+  .sidebar-user .roblox { font-size: 14px; font-weight: 600; color: var(--text-bright); }
+  .sidebar-user .role-badge {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; letter-spacing: 1px;
+    padding: 2px 7px; margin-top: 4px;
+    background: rgba(0,212,255,0.15); color: var(--accent);
+    border: 1px solid rgba(0,212,255,0.3);
+  }
+  .sidebar-char {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px; color: var(--text-dim);
+  }
+  .sidebar-char .char-name { font-size: 14px; color: var(--text); font-weight: 600; margin-bottom: 2px; }
+  .sidebar-char .char-balance { font-family: 'Share Tech Mono', monospace; color: var(--accent3); font-size: 13px; }
+  nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+  .nav-section { padding: 8px 16px 4px; font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 3px; }
+  .nav-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px;
+    color: var(--text-dim); font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+    border-left: 2px solid transparent;
+  }
+  .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .nav-link.active { color: var(--accent); border-left-color: var(--accent); background: rgba(0,212,255,0.06); }
+  .nav-link .icon { width: 18px; text-align: center; font-size: 16px; }
+  .nav-link.admin-link { color: var(--accent2); }
+  .nav-link.admin-link:hover, .nav-link.admin-link.active { color: var(--accent2); border-left-color: var(--accent2); background: rgba(255,77,109,0.06); }
+  .sidebar-bottom { padding: 12px 16px; border-top: 1px solid var(--border); }
+  .logout-btn {
+    width: 100%; background: none; border: 1px solid var(--border);
+    color: var(--text-dim); font-family: 'Rajdhani', sans-serif;
+    font-size: 13px; font-weight: 600; letter-spacing: 2px;
+    padding: 8px; cursor: pointer; transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .logout-btn:hover { color: var(--accent2); border-color: var(--accent2); }
+
+  /* MAIN */
+  .main { margin-left: 220px; flex: 1; min-height: 100vh; }
+  .topbar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 14px 28px; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-title { font-size: 20px; font-weight: 700; letter-spacing: 2px; color: var(--text-bright); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .warn-indicator {
+    font-family: 'Share Tech Mono', monospace; font-size: 11px;
+    padding: 4px 10px; border: 1px solid;
+  }
+  .warn-0 { color: var(--accent3); border-color: rgba(0,230,118,0.3); background: rgba(0,230,118,0.07); }
+  .warn-ok { color: var(--accent4); border-color: rgba(255,214,0,0.3); background: rgba(255,214,0,0.07); }
+  .warn-bad { color: var(--accent2); border-color: rgba(255,77,109,0.3); background: rgba(255,77,109,0.07); }
+  .content { padding: 28px; }
+
+  /* PANELS */
+  .panel {
+    background: var(--surface); border: 1px solid var(--border);
+    position: relative; overflow: hidden;
+  }
+  .panel::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.4;
+  }
+  .panel-header {
+    padding: 16px 20px 14px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .panel-title { font-size: 15px; font-weight: 700; letter-spacing: 2px; color: var(--text-bright); text-transform: uppercase; }
+  .panel-body { padding: 20px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* STAT CARDS */
+  .stat-card {
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 18px; position: relative;
+  }
+  .stat-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 8px; }
+  .stat-value { font-size: 26px; font-weight: 700; color: var(--text-bright); }
+  .stat-value.accent { color: var(--accent3); }
+  .stat-value.warn { color: var(--accent4); }
+  .stat-sub { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+  /* FORMS */
+  .form-group { margin-bottom: 16px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-label {
+    display: block; font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 6px;
+  }
+  .form-input {
+    width: 100%; background: #080c12; border: 1px solid var(--border);
+    color: var(--text); font-family: 'Share Tech Mono', monospace;
+    font-size: 13px; padding: 10px 12px; outline: none; transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  textarea.form-input { resize: vertical; min-height: 80px; }
+  select.form-input { cursor: pointer; }
+  .btn {
+    background: var(--accent); color: #000;
+    border: none; font-family: 'Rajdhani', sans-serif;
+    font-size: 13px; font-weight: 700; letter-spacing: 2px;
+    padding: 10px 20px; cursor: pointer; transition: all 0.2s;
+    text-transform: uppercase; clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+  }
+  .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn.danger { background: var(--accent2); }
+  .btn.success { background: var(--accent3); }
+  .btn.warning { background: var(--accent4); }
+  .btn.sm { padding: 6px 14px; font-size: 11px; }
+
+  /* LISTS & TABLES */
+  .list-item {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 12px;
+    transition: background 0.15s;
+  }
+  .list-item:last-child { border-bottom: none; }
+  .list-item:hover { background: rgba(255,255,255,0.02); }
+  .list-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .list-main { flex: 1; min-width: 0; }
+  .list-title { font-size: 14px; font-weight: 600; color: var(--text-bright); }
+  .list-sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; font-family: 'Share Tech Mono', monospace; }
+  .list-meta { font-size: 11px; color: var(--text-dim); flex-shrink: 0; }
+  .priority-badge {
+    display: inline-block; font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; letter-spacing: 1px; padding: 2px 7px;
+  }
+  .priority-low { background: rgba(0,230,118,0.15); color: var(--accent3); }
+  .priority-medium { background: rgba(0,212,255,0.15); color: var(--accent); }
+  .priority-high { background: rgba(255,214,0,0.15); color: var(--accent4); }
+  .priority-critical { background: rgba(255,77,109,0.2); color: var(--accent2); }
+
+  /* CHAR CARDS */
+  .char-card {
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 16px; cursor: pointer; transition: all 0.2s; position: relative;
+  }
+  .char-card:hover { border-color: rgba(0,212,255,0.3); }
+  .char-card.active-char { border-color: var(--accent); }
+  .char-card.active-char::before {
+    content: '▶ AKTIV'; position: absolute; top: 8px; right: 10px;
+    font-family: 'Share Tech Mono', monospace; font-size: 8px; color: var(--accent); letter-spacing: 2px;
+  }
+  .char-card.dead { opacity: 0.5; }
+  .char-name-big { font-size: 18px; font-weight: 700; color: var(--text-bright); margin-bottom: 4px; }
+  .char-info { font-size: 12px; color: var(--text-dim); margin-bottom: 2px; font-family: 'Share Tech Mono', monospace; }
+  .char-rep { font-size: 13px; font-weight: 600; margin-top: 8px; }
+  .rep-pos { color: var(--accent3); }
+  .rep-neg { color: var(--accent2); }
+
+  /* ALERTS */
+  .alert { padding: 10px 14px; font-family: 'Share Tech Mono', monospace; font-size: 11px; margin: 10px 0; border-left: 3px solid; }
+  .alert.error { background: rgba(255,77,109,0.08); border-color: var(--accent2); color: var(--accent2); }
+  .alert.success { background: rgba(0,230,118,0.08); border-color: var(--accent3); color: var(--accent3); }
+  .alert.info { background: rgba(0,212,255,0.08); border-color: var(--accent); color: var(--accent); }
+
+  /* HIDDEN */
+  .hidden { display: none; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* TX ROW */
+  .tx-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .tx-pos { color: var(--accent3); font-weight: 700; font-family: 'Share Tech Mono', monospace; }
+  .tx-neg { color: var(--accent2); font-weight: 700; font-family: 'Share Tech Mono', monospace; }
+
+  /* NEWS */
+  .news-card { background: var(--surface2); border: 1px solid var(--border); padding: 16px; margin-bottom: 12px; }
+  .news-title { font-size: 16px; font-weight: 700; color: var(--text-bright); margin-bottom: 6px; }
+  .news-content { font-size: 13px; color: var(--text); line-height: 1.6; }
+  .news-meta { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); margin-top: 8px; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 40px; color: var(--text-dim); font-family: 'Share Tech Mono', monospace; font-size: 12px; }
+  .empty .emoji { font-size: 32px; margin-bottom: 12px; }
+
+  /* TOAST */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 12px 18px; font-family: 'Share Tech Mono', monospace; font-size: 12px;
+    max-width: 300px; transform: translateY(80px); opacity: 0; transition: all 0.3s;
+    border-left: 3px solid var(--accent3);
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.error-toast { border-left-color: var(--accent2); color: var(--accent2); }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="name">NEXUS RP</div>
+    <div class="sub">ROLEPLAY SYSTEM</div>
+  </div>
+  <div class="sidebar-user">
+    <div class="roblox" id="sb-roblox">Lade...</div>
+    <div class="role-badge" id="sb-role">PLAYER</div>
+  </div>
+  <div class="sidebar-char" id="sb-char-area">
+    <div class="char-name" id="sb-char-name">Kein Charakter aktiv</div>
+    <div class="char-balance" id="sb-char-balance"></div>
+  </div>
+  <nav>
+    <div class="nav-section">SPIELER</div>
+    <div class="nav-link active" onclick="showPage('overview')"><span class="icon">🏠</span> Übersicht</div>
+    <div class="nav-link" onclick="showPage('characters')"><span class="icon">👤</span> Charaktere</div>
+    <div class="nav-link" onclick="showPage('economy')"><span class="icon">💰</span> Wirtschaft</div>
+    <div class="nav-link" onclick="showPage('emergency')"><span class="icon">🚨</span> Notruf</div>
+    <div class="nav-link" onclick="showPage('news')"><span class="icon">📰</span> Zeitung</div>
+    <div class="nav-link" onclick="showPage('wanted')"><span class="icon">🎯</span> Fahndung</div>
+    <div class="nav-link" onclick="showPage('inventory')"><span class="icon">🎒</span> Inventar</div>
+    <div class="nav-link" onclick="showPage('profile')"><span class="icon">⚙️</span> Profil</div>
+    <div class="nav-link" onclick="showPage('laws')"><span class="icon">📜</span> Gesetze</div>
+
+    <div class="nav-section" id="admin-section" style="display:none">VERWALTUNG</div>
+    <div class="nav-link admin-link hidden" id="admin-nav-btn" onclick="window.location.href='/admin'"><span class="icon">⚙️</span> Admin-Panel</div>
+  </nav>
+  <div class="sidebar-bottom">
+    <button class="logout-btn" onclick="doLogout()">🔒 Logout</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">ÜBERSICHT</div>
+    <div class="topbar-right">
+      <div class="warn-indicator warn-0" id="warn-badge">0 WARNS</div>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- PAGE: OVERVIEW -->
+    <div class="page active" id="page-overview">
+      <div class="grid-3" style="margin-bottom:20px" id="overview-stats">
+        <div class="stat-card"><div class="stat-label">KONTOSTAND</div><div class="stat-value accent" id="ov-balance">–</div><div class="stat-sub">Hauptkonto</div></div>
+        <div class="stat-card"><div class="stat-label">REPUTATION</div><div class="stat-value" id="ov-rep">–</div><div class="stat-sub">Aktiver Charakter</div></div>
+        <div class="stat-card"><div class="stat-label">WARNS</div><div class="stat-value warn" id="ov-warns">–</div><div class="stat-sub">Account-Vermerke</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">📰 Neueste Nachrichten</div></div>
+          <div id="ov-news-list"><div class="empty"><div class="emoji">📡</div>Lade Nachrichten...</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">🚨 Offene Notrufe</div></div>
+          <div id="ov-calls-list"><div class="empty"><div class="emoji">📡</div>Lade Notrufe...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: CHARACTERS -->
+    <div class="page" id="page-characters">
+      <div id="char-list" class="grid-3" style="margin-bottom:20px"></div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">➕ Neuen Charakter erstellen</div></div>
+        <div class="panel-body">
+          <div id="char-create-alert"></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">NAME</label><input class="form-input" id="c-name" placeholder="Max Mustermann"></div>
+            <div class="form-group"><label class="form-label">ALTER</label><input class="form-input" type="number" id="c-age" placeholder="25" min="16" max="80"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">BERUF</label><input class="form-input" id="c-job" placeholder="Mechaniker"></div>
+            <div class="form-group"><label class="form-label">FRAKTION</label>
+              <select class="form-input" id="c-faction"><option value="">Keine / Zivilist</option></select>
+            </div>
+          </div>
+          <div class="form-group"><label class="form-label">AUSSEHEN</label><textarea class="form-input" id="c-appearance" placeholder="Beschreibe das Aussehen deines Charakters..."></textarea></div>
+          <div class="form-group"><label class="form-label">HINTERGRUNDGESCHICHTE</label><textarea class="form-input" id="c-backstory" placeholder="Die Geschichte deines Charakters..."></textarea></div>
+          <button class="btn" onclick="createCharacter()">Charakter erstellen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: ECONOMY -->
+    <div class="page" id="page-economy">
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">💸 Geld überweisen</div></div>
+          <div class="panel-body">
+            <div id="transfer-alert"></div>
+            <div class="form-group"><label class="form-label">EMPFÄNGER CHARAKTER-ID</label><input class="form-input" id="t-receiver" placeholder="Charakter-ID des Empfängers"></div>
+            <div class="form-group"><label class="form-label">BETRAG (€)</label><input class="form-input" type="number" id="t-amount" placeholder="100" min="1"></div>
+            <div class="form-group"><label class="form-label">NOTIZ</label><input class="form-input" id="t-note" placeholder="Optional..."></div>
+            <button class="btn" onclick="doTransfer()">Überweisen</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">📋 Transaktionshistorie</div></div>
+          <div id="tx-list" style="max-height:400px;overflow-y:auto;padding:12px 20px">
+            <div class="empty"><div class="emoji">💳</div>Keine Transaktionen</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: EMERGENCY -->
+    <div class="page" id="page-emergency">
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">🆘 Notruf absenden</div></div>
+          <div class="panel-body">
+            <div id="emergency-alert"></div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">TYP</label>
+                <select class="form-input" id="e-type">
+                  <option value="police">🚓 Polizei</option>
+                  <option value="fire">🚒 Feuerwehr</option>
+                  <option value="ems">🚑 Rettungsdienst</option>
+                  <option value="all">🆘 Alle</option>
+                </select>
+              </div>
+              <div class="form-group"><label class="form-label">PRIORITÄT</label>
+                <select class="form-input" id="e-priority">
+                  <option value="low">Niedrig</option>
+                  <option value="medium" selected>Mittel</option>
+                  <option value="high">Hoch</option>
+                  <option value="critical">KRITISCH</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group"><label class="form-label">ORT</label><input class="form-input" id="e-location" placeholder="Straße, Bereich..."></div>
+            <div class="form-group"><label class="form-label">BESCHREIBUNG</label><textarea class="form-input" id="e-desc" placeholder="Was ist passiert?"></textarea></div>
+            <div class="form-group" style="display:flex;align-items:center;gap:10px">
+              <input type="checkbox" id="e-anon" style="width:auto">
+              <label for="e-anon" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:1px;cursor:pointer">ANONYM</label>
+            </div>
+            <button class="btn danger" onclick="sendEmergency()">🚨 NOTRUF ABSENDEN</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">📡 Aktive Notrufe</div>
+            <button class="btn sm" style="margin-left:auto" onclick="loadEmergencyCalls()">↻ Aktualisieren</button>
+          </div>
+          <div id="calls-list"><div class="empty"><div class="emoji">📡</div>Lade Notrufe...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: NEWS -->
+    <div class="page" id="page-news">
+      <div class="grid-2">
+        <div>
+          <div id="news-list"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">✏️ Artikel verfassen</div></div>
+          <div class="panel-body">
+            <div id="news-alert"></div>
+            <div class="form-group"><label class="form-label">TITEL</label><input class="form-input" id="n-title" placeholder="Artikel-Titel..."></div>
+            <div class="form-group"><label class="form-label">INHALT</label><textarea class="form-input" id="n-content" placeholder="Schreibe deinen Artikel..." style="min-height:180px"></textarea></div>
+            <button class="btn" onclick="publishNews()">Veröffentlichen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: WANTED -->
+    <div class="page" id="page-wanted">
+      <div id="wanted-list"></div>
+    </div>
+
+
+    <!-- PAGE: INVENTORY -->
+    <div class="page" id="page-inventory">
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">🎒 Mein Inventar</div>
+            <button class="btn sm" style="margin-left:auto" onclick="loadInventory()">↻</button>
+          </div>
+          <div id="inv-list"><div class="empty"><div class="emoji">🎒</div>Lade Inventar...</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">🔄 Item handeln</div></div>
+          <div class="panel-body">
+            <div id="trade-alert"></div>
+            <div class="form-group"><label class="form-label">ITEM-ID</label><input class="form-input" id="trade-item-id" placeholder="Item-ID aus deinem Inventar"></div>
+            <div class="form-group"><label class="form-label">EMPFÄNGER CHARAKTER-ID</label><input class="form-input" id="trade-to-id" placeholder="Charakter-ID des Empfängers"></div>
+            <div class="form-group"><label class="form-label">PREIS (€, 0 = Geschenk)</label><input class="form-input" type="number" id="trade-price" placeholder="0" min="0"></div>
+            <button class="btn" onclick="doTrade()">Item übertragen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: PROFILE -->
+    <div class="page" id="page-profile">
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">👤 Profil bearbeiten</div></div>
+          <div class="panel-body">
+            <div id="profile-alert"></div>
+            <div class="form-group"><label class="form-label">PROFILBILD (URL)</label><input class="form-input" id="prof-pic" placeholder="https://... oder Roblox-Avatar-Link"></div>
+            <div class="form-group"><label class="form-label">BIO / BESCHREIBUNG</label><textarea class="form-input" id="prof-bio" placeholder="Erzähl etwas über dich..." style="min-height:100px"></textarea></div>
+            <button class="btn" onclick="saveProfile()">Profil speichern</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">🔑 Passwort ändern</div></div>
+          <div class="panel-body">
+            <div id="pw-alert"></div>
+            <div class="form-group"><label class="form-label">ALTES PASSWORT</label><input class="form-input" type="password" id="old-pw" placeholder="••••••••"></div>
+            <div class="form-group"><label class="form-label">NEUES PASSWORT</label><input class="form-input" type="password" id="new-pw" placeholder="mind. 6 Zeichen"></div>
+            <div class="form-group"><label class="form-label">BESTÄTIGEN</label><input class="form-input" type="password" id="new-pw2" placeholder="••••••••"></div>
+            <button class="btn" onclick="changePassword()">Passwort ändern</button>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-top:20px">
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">🩺 Charakter-Details</div></div>
+          <div class="panel-body" id="char-details-body">
+            <div class="empty"><div class="emoji">👤</div>Kein aktiver Charakter</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">🗑️ Account löschen</div></div>
+          <div class="panel-body">
+            <div id="delete-alert"></div>
+            <p style="color:var(--text-dim);font-size:13px;line-height:1.6;margin-bottom:16px">Stellt einen Löschantrag. Ein Super Admin muss diesen bestätigen. Alle deine Charaktere und Daten werden dauerhaft entfernt.</p>
+            <button class="btn danger" onclick="requestDelete()">Löschantrag stellen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: LAWS -->
+    <div class="page" id="page-laws">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">📜 Gesetzgebung & Strafkatalog</div></div>
+        <div id="laws-body" style="padding:20px">
+          <div class="empty"><div class="emoji">📜</div>Lade Gesetze...</div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:20px">
+        <div class="panel-header"><div class="panel-title">📋 Server-Regeln</div></div>
+        <div id="rules-body" style="padding:20px">
+          <div class="empty"><div class="emoji">📋</div>Lade Regeln...</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- .content -->
+</div><!-- .main -->
+
+<div id="toast"></div>
+
+<script>
+let currentUser = {};
+let activeChar = null;
+
+// ─── Init ───────────────────────────────────────────────
+async function init() {
+  const r = await fetch('/api/auth/me');
+  const d = await r.json();
+  if (!d.ok) { location.href = '/'; return; }
+  currentUser = d.data;
+  document.getElementById('sb-roblox').textContent = currentUser.roblox_name || '–';
+  const roleMap = {player:'SPIELER', mod:'MODERATOR', admin:'ADMIN', superadmin:'SUPER ADMIN'};
+  document.getElementById('sb-role').textContent = roleMap[currentUser.role] || 'SPIELER';
+  if (['mod','admin','superadmin'].includes(currentUser.role)) {
+    document.getElementById('admin-section').style.display = '';
+    document.getElementById('admin-nav-btn').classList.remove('hidden');
+  }
+  await loadWarnCount();
+  await loadActiveChar();
+  await loadOverviewData();
+}
+
+async function loadWarnCount() {
+  const r = await fetch('/api/account/warns');
+  const d = await r.json();
+  if (!d.ok) return;
+  const count = d.data.warn_count;
+  const el = document.getElementById('warn-badge');
+  el.textContent = count + ' WARNS';
+  document.getElementById('ov-warns').textContent = count;
+  el.className = 'warn-indicator ' + (count === 0 ? 'warn-0' : count < 3 ? 'warn-ok' : 'warn-bad');
+}
+
+async function loadActiveChar() {
+  if (!currentUser.active_character_id) return;
+  const r = await fetch('/api/characters');
+  const d = await r.json();
+  if (!d.ok) return;
+  activeChar = d.data.find(c => c.id === currentUser.active_character_id) || d.data.find(c => c.is_active && !c.is_dead);
+  if (activeChar) {
+    document.getElementById('sb-char-name').textContent = activeChar.name;
+    document.getElementById('sb-char-balance').textContent = '€' + activeChar.balance.toFixed(2);
+    document.getElementById('ov-balance').textContent = '€' + activeChar.balance.toFixed(2);
+    const rep = activeChar.reputation;
+    const repEl = document.getElementById('ov-rep');
+    repEl.textContent = (rep >= 0 ? '+' : '') + rep;
+    repEl.className = 'stat-value ' + (rep >= 0 ? 'accent' : 'rep-neg');
+  }
+}
+
+async function loadOverviewData() {
+  // News
+  const nr = await fetch('/api/news?limit=3');
+  const nd = await nr.json();
+  const nEl = document.getElementById('ov-news-list');
+  if (nd.ok && nd.data.length > 0) {
+    nEl.innerHTML = nd.data.map(n => `<div class="list-item"><div class="list-main"><div class="list-title">${esc(n.title)}</div><div class="list-sub">${fmtDate(n.published_at)}</div></div></div>`).join('');
+  } else nEl.innerHTML = '<div class="empty"><div class="emoji">📭</div>Keine Nachrichten</div>';
+
+  // Emergency
+  const er = await fetch('/api/emergency/calls');
+  const ed = await er.json();
+  const eEl = document.getElementById('ov-calls-list');
+  if (ed.ok && ed.data.length > 0) {
+    eEl.innerHTML = ed.data.slice(0,4).map(c => `<div class="list-item"><div class="list-icon">${callIcon(c.call_type)}</div><div class="list-main"><div class="list-title">${esc(c.location)}</div><div class="list-sub">${esc(c.description).substring(0,60)}</div></div><div class="list-meta"><span class="priority-badge priority-${c.priority}">${c.priority.toUpperCase()}</span></div></div>`).join('');
+  } else eEl.innerHTML = '<div class="empty"><div class="emoji">✅</div>Keine offenen Notrufe</div>';
+}
+
+// ─── Pages ─────────────────────────────────────────────
+const pageTitles = {overview:'ÜBERSICHT',characters:'CHARAKTERE',economy:'WIRTSCHAFT',emergency:'NOTRUF-SYSTEM',news:'ZEITUNG',wanted:'FAHNDUNGSLISTE',inventory:'INVENTAR',profile:'PROFIL & EINSTELLUNGEN',laws:'GESETZGEBUNG'};
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelector(`[onclick="showPage('${page}')"]`).classList.add('active');
+  document.getElementById('page-title').textContent = pageTitles[page] || page.toUpperCase();
+  const loaders = {characters:loadCharacters,economy:loadEconomy,emergency:loadEmergencyCalls,news:loadNews,wanted:loadWanted,inventory:loadInventory,profile:loadProfile,laws:loadLaws};
+  if (loaders[page]) loaders[page]();
+}
+
+// ─── Characters ────────────────────────────────────────
+async function loadCharacters() {
+  const r = await fetch('/api/characters');
+  const d = await r.json();
+  const el = document.getElementById('char-list');
+  if (!d.ok || d.data.length === 0) { el.innerHTML = '<div class="empty"><div class="emoji">👤</div>Noch keine Charaktere</div>'; return; }
+  el.innerHTML = d.data.map(c => `
+    <div class="char-card ${c.is_dead?'dead':''} ${c.id===currentUser.active_character_id?'active-char':''}" onclick="setActiveChar('${c.id}')">
+      ${c.is_dead?'<div style="color:var(--accent2);font-family:\'Share Tech Mono\',monospace;font-size:10px;margin-bottom:6px">💀 VERSTORBEN</div>':''}
+      <div class="char-name-big">${esc(c.name)}</div>
+      <div class="char-info">Alter: ${c.age} | ${esc(c.job)}</div>
+      <div class="char-info">ID: ${c.id}</div>
+      <div class="char-rep ${c.reputation>=0?'rep-pos':'rep-neg'}">REP: ${c.reputation>=0?'+':''}${c.reputation}</div>
+      <div class="char-info" style="margin-top:6px">💰 €${c.balance.toFixed(2)}</div>
+    </div>
+  `).join('');
+}
+
+async function setActiveChar(cid) {
+  const r = await fetch('/api/characters/set_active',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({character_id:cid})});
+  const d = await r.json();
+  if (d.ok) { currentUser.active_character_id = cid; showToast('Charakter gewechselt!'); await loadActiveChar(); await loadCharacters(); }
+  else showToast(d.error, true);
+}
+
+async function createCharacter() {
+  const payload = {
+    name: document.getElementById('c-name').value.trim(),
+    age: parseInt(document.getElementById('c-age').value),
+    job: document.getElementById('c-job').value.trim(),
+    appearance: document.getElementById('c-appearance').value.trim(),
+    backstory: document.getElementById('c-backstory').value.trim(),
+    faction_id: document.getElementById('c-faction').value || null
+  };
+  if (!payload.name || !payload.age) return showAlert('char-create-alert','Bitte Name und Alter ausfüllen.','error');
+  const r = await fetch('/api/characters/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d = await r.json();
+  if (d.ok) { showAlert('char-create-alert','Charakter erstellt!','success'); await loadCharacters(); }
+  else showAlert('char-create-alert', d.error, 'error');
+}
+
+// ─── Economy ───────────────────────────────────────────
+async function loadEconomy() {
+  const r = await fetch('/api/economy/history');
+  const d = await r.json();
+  const el = document.getElementById('tx-list');
+  if (!d.ok) { el.innerHTML = `<div class="alert info">${d.error}</div>`; return; }
+  if (d.data.length === 0) { el.innerHTML = '<div class="empty"><div class="emoji">💳</div>Keine Transaktionen</div>'; return; }
+  el.innerHTML = d.data.slice().reverse().map(tx => {
+    const isSender = tx.sender_id === currentUser.active_character_id;
+    const amtClass = isSender ? 'tx-neg' : 'tx-pos';
+    const amtStr = (isSender ? '-' : '+') + '€' + Math.abs(tx.amount).toFixed(2);
+    return `<div class="tx-row">
+      <div><div style="font-size:13px;font-weight:600">${esc(tx.note||tx.tx_type)}</div><div style="font-size:11px;color:var(--text-dim);font-family:\'Share Tech Mono\',monospace">${fmtDate(tx.timestamp)}</div></div>
+      <div class="${amtClass}">${amtStr}</div>
+    </div>`;
+  }).join('');
+}
+
+async function doTransfer() {
+  const payload = {
+    receiver_id: document.getElementById('t-receiver').value.trim(),
+    amount: parseFloat(document.getElementById('t-amount').value),
+    note: document.getElementById('t-note').value.trim()
+  };
+  if (!payload.receiver_id || !payload.amount) return showAlert('transfer-alert','Bitte Empfänger und Betrag angeben.','error');
+  const r = await fetch('/api/economy/transfer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d = await r.json();
+  if (d.ok) { showAlert('transfer-alert','Überweisung erfolgreich!','success'); await loadEconomy(); await loadActiveChar(); }
+  else showAlert('transfer-alert', d.error, 'error');
+}
+
+// ─── Emergency ─────────────────────────────────────────
+async function loadEmergencyCalls() {
+  const r = await fetch('/api/emergency/calls');
+  const d = await r.json();
+  const el = document.getElementById('calls-list');
+  if (!d.ok || d.data.length === 0) { el.innerHTML = '<div class="empty"><div class="emoji">✅</div>Keine offenen Notrufe</div>'; return; }
+  el.innerHTML = d.data.map(c => `
+    <div class="list-item" style="flex-direction:column;gap:8px">
+      <div style="display:flex;gap:12px;width:100%">
+        <div class="list-icon">${callIcon(c.call_type)}</div>
+        <div class="list-main">
+          <div class="list-title">${esc(c.location)}</div>
+          <div class="list-sub">${esc(c.description)}</div>
+          <div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <span class="priority-badge priority-${c.priority}">${c.priority.toUpperCase()}</span>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim)">${c.status}</span>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);margin-left:auto">${fmtDate(c.created_at)}</span>
+          </div>
+        </div>
+      </div>
+      ${c.status !== 'closed' ? `
+      <div style="display:flex;gap:6px;flex-wrap:wrap;padding-left:32px">
+        ${c.status === 'open' ? `<button class="btn sm success" onclick="updateCallStatus('${c.id}','accepted')">✓ Annehmen</button>` : ''}
+        ${c.status === 'accepted' ? `<button class="btn sm warning" onclick="updateCallStatus('${c.id}','in_progress')">▶ In Bearbeitung</button>` : ''}
+        ${c.status !== 'closed' ? `<button class="btn sm" style="background:#333" onclick="updateCallStatus('${c.id}','closed')">✗ Abschließen</button>` : ''}
+        <button class="btn sm" style="background:rgba(0,212,255,0.15);color:var(--accent)" onclick="showNoteForm('${c.id}')">+ Notiz</button>
+      </div>
+      <div id="note-form-${c.id}" style="display:none;padding-left:32px;width:100%">
+        <div style="display:flex;gap:8px">
+          <input class="form-input" id="note-text-${c.id}" placeholder="Notiz eingeben..." style="flex:1">
+          <button class="btn sm" onclick="addCallNote('${c.id}')">Speichern</button>
+        </div>
+      </div>
+      ` : ''}
+      ${c.notes && c.notes.length ? `<div style="padding-left:32px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim)">${c.notes.map(n=>esc(n)).join(' · ')}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+async function sendEmergency() {
+  const payload = {
+    call_type: document.getElementById('e-type').value,
+    priority: document.getElementById('e-priority').value,
+    location: document.getElementById('e-location').value.trim(),
+    description: document.getElementById('e-desc').value.trim(),
+    anonymous: document.getElementById('e-anon').checked
+  };
+  if (!payload.location || !payload.description) return showAlert('emergency-alert','Bitte Ort und Beschreibung angeben.','error');
+  const r = await fetch('/api/emergency/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d = await r.json();
+  if (d.ok) { showAlert('emergency-alert','Notruf abgesetzt!','success'); await loadEmergencyCalls(); document.getElementById('e-location').value=''; document.getElementById('e-desc').value=''; }
+  else showAlert('emergency-alert', d.error, 'error');
+}
+
+// ─── News ──────────────────────────────────────────────
+async function loadNews() {
+  const r = await fetch('/api/news?limit=20');
+  const d = await r.json();
+  const el = document.getElementById('news-list');
+  if (!d.ok || d.data.length === 0) { el.innerHTML = '<div class="empty"><div class="emoji">📭</div>Keine Nachrichten</div>'; return; }
+  el.innerHTML = d.data.slice().reverse().map(n => `
+    <div class="news-card">
+      ${n.is_admin_post?'<div style="font-family:\'Share Tech Mono\',monospace;font-size:9px;color:var(--accent2);letter-spacing:2px;margin-bottom:6px">★ OFFIZIELLE MELDUNG</div>':''}
+      <div class="news-title">${esc(n.title)}</div>
+      <div class="news-content">${esc(n.content)}</div>
+      <div class="news-meta">Von: ${n.author_character_id} · ${fmtDate(n.published_at)}</div>
+    </div>
+  `).join('');
+}
+
+async function publishNews() {
+  const payload = {
+    title: document.getElementById('n-title').value.trim(),
+    content: document.getElementById('n-content').value.trim()
+  };
+  if (!payload.title || !payload.content) return showAlert('news-alert','Bitte Titel und Inhalt ausfüllen.','error');
+  const r = await fetch('/api/news/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d = await r.json();
+  if (d.ok) { showAlert('news-alert','Veröffentlicht!','success'); document.getElementById('n-title').value=''; document.getElementById('n-content').value=''; await loadNews(); }
+  else showAlert('news-alert', d.error, 'error');
+}
+
+// ─── Wanted ────────────────────────────────────────────
+async function loadWanted() {
+  const r = await fetch('/api/wanted');
+  const d = await r.json();
+  const el = document.getElementById('wanted-list');
+  if (!d.ok || d.data.length === 0) { el.innerHTML = '<div class="empty"><div class="emoji">🕊️</div>Keine aktiven Fahndungen</div>'; return; }
+  el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">${d.data.map(w => `
+    <div class="panel" style="padding:0">
+      <div style="padding:16px;border-bottom:1px solid var(--border)">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--accent2);letter-spacing:3px;margin-bottom:6px">🎯 FAHNDUNG</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text-bright)">Charakter: ${w.character_id}</div>
+      </div>
+      <div style="padding:16px">
+        <div style="font-size:13px;color:var(--text);margin-bottom:10px">${esc(w.description)}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--accent3)">Belohnung: €${(w.reward||0).toFixed(2)}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:6px">${fmtDate(w.created_at)}</div>
+      </div>
+    </div>
+  `).join('')}</div>`;
+}
+
+
+// ─── Inventar ──────────────────────────────────────────
+async function loadInventory() {
+  if (!currentUser.active_character_id) {
+    document.getElementById('inv-list').innerHTML = '<div class="empty"><div class="emoji">👤</div>Bitte zuerst einen Charakter aktivieren</div>';
+    return;
+  }
+  const r = await fetch('/api/inventory');
+  const d = await r.json();
+  const el = document.getElementById('inv-list');
+  if (!d.ok || d.data.length === 0) { el.innerHTML = '<div class="empty"><div class="emoji">🎒</div>Inventar ist leer</div>'; return; }
+  const rarityColor = {common:'var(--text-dim)',uncommon:'#00d4ff',rare:'#a855f7',legendary:'#ffd600'};
+  const condIcon = {new:'✨',used:'👍',damaged:'⚠️',broken:'💀'};
+  el.innerHTML = d.data.map(item => `
+    <div class="list-item">
+      <div class="list-icon">${itemIcon(item.category)}</div>
+      <div class="list-main">
+        <div class="list-title" style="color:${rarityColor[item.rarity]||'var(--text-bright)'}">${esc(item.name)}</div>
+        <div class="list-sub">${item.category} · ${item.rarity} · ${condIcon[item.condition]||''} ${item.condition}</div>
+        ${item.expires_at ? `<div class="list-sub" style="color:var(--accent2)">Läuft ab: ${fmtDate(item.expires_at)}</div>` : ''}
+        ${item.requires_license ? '<div class="list-sub" style="color:var(--accent4)">⚠ Lizenz erforderlich</div>' : ''}
+        ${item.is_stolen ? '<div class="list-sub" style="color:var(--accent2)">🔴 GESTOHLEN</div>' : ''}
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim)">${item.id}</div>
+    </div>
+  `).join('');
+}
+
+function itemIcon(cat) {
+  return {weapon:'🔫',vehicle:'🚗',clothing:'👕',equipment:'🔧',food:'🍔',document:'📄'}[cat]||'📦';
+}
+
+async function doTrade() {
+  const item_id = document.getElementById('trade-item-id').value.trim();
+  const to = document.getElementById('trade-to-id').value.trim();
+  const price = parseFloat(document.getElementById('trade-price').value)||0;
+  if (!item_id||!to) return showAlert('trade-alert','Bitte Item-ID und Empfänger angeben.','error');
+  const r = await fetch('/api/inventory/trade',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item_id,to_character_id:to,price})});
+  const d = await r.json();
+  if (d.ok) { showAlert('trade-alert','Item erfolgreich übertragen!','success'); await loadInventory(); }
+  else showAlert('trade-alert',d.error,'error');
+}
+
+// ─── Profil ────────────────────────────────────────────
+async function loadProfile() {
+  const r = await fetch('/api/account/profile');
+  const d = await r.json();
+  if (!d.ok) return;
+  const acc = d.data;
+  document.getElementById('prof-pic').value = acc.profile_picture||'';
+  document.getElementById('prof-bio').value = acc.bio||'';
+  // Charakter-Details laden
+  if (currentUser.active_character_id) {
+    const cr = await fetch('/api/characters');
+    const cd = await cr.json();
+    if (cd.ok) {
+      const char = cd.data.find(c=>c.id===currentUser.active_character_id);
+      if (char) renderCharDetails(char);
+    }
+  }
+}
+
+function renderCharDetails(c) {
+  const licenseLabel = {valid:'✅ Gültig',revoked:'❌ Entzogen',never:'— Nie besessen'};
+  const el = document.getElementById('char-details-body');
+  el.innerHTML = `
+    <div style="margin-bottom:16px">
+      <div class="form-label">AKTIVER CHARAKTER</div>
+      <div style="font-size:18px;font-weight:700;color:var(--text-bright);margin-bottom:4px">${esc(c.name)}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim)">ID: ${c.id}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div><div class="form-label">FÜHRERSCHEIN</div><div style="font-size:13px">${licenseLabel[c.drivers_license]||c.drivers_license}</div></div>
+      <div><div class="form-label">REPUTATION</div><div style="font-size:13px;color:${c.reputation>=0?'var(--accent3)':'var(--accent2)'}">${c.reputation>=0?'+':''}${c.reputation}</div></div>
+      <div><div class="form-label">KONTOSTAND</div><div style="font-size:13px;color:var(--accent3)">€${c.balance.toFixed(2)}</div></div>
+      <div><div class="form-label">CHARAKTER SEIT</div><div style="font-size:11px;font-family:'Share Tech Mono',monospace">${fmtDate(c.created_at)}</div></div>
+    </div>
+    ${c.medical_record ? `
+    <div style="margin-bottom:12px">
+      <div class="form-label">KRANKENAKTE</div>
+      <div style="font-size:12px;color:var(--text-dim);font-family:'Share Tech Mono',monospace">
+        Blutgruppe: ${c.medical_record.blood_type||'–'}<br>
+        Allergien: ${(c.medical_record.allergies||[]).join(', ')||'–'}<br>
+        ${(c.medical_record.notes||[]).slice(-2).map(n=>`<span>• ${esc(n)}</span>`).join('<br>')}
+      </div>
+    </div>` : ''}
+    ${c.vehicle_licenses&&c.vehicle_licenses.length ? `
+    <div>
+      <div class="form-label">FAHRZEUGZULASSUNGEN</div>
+      <div style="font-size:12px;font-family:'Share Tech Mono',monospace">${c.vehicle_licenses.join(', ')}</div>
+    </div>` : ''}
+  `;
+}
+
+async function saveProfile() {
+  const payload = {
+    profile_picture: document.getElementById('prof-pic').value.trim(),
+    bio: document.getElementById('prof-bio').value.trim()
+  };
+  const r = await fetch('/api/account/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d = await r.json();
+  if (d.ok) showAlert('profile-alert','Profil gespeichert!','success');
+  else showAlert('profile-alert',d.error,'error');
+}
+
+async function changePassword() {
+  const old_password = document.getElementById('old-pw').value;
+  const new_password = document.getElementById('new-pw').value;
+  const new_pw2 = document.getElementById('new-pw2').value;
+  if (!old_password||!new_password) return showAlert('pw-alert','Bitte alle Felder ausfüllen.','error');
+  if (new_password!==new_pw2) return showAlert('pw-alert','Neue Passwörter stimmen nicht überein.','error');
+  if (new_password.length<6) return showAlert('pw-alert','Mind. 6 Zeichen.','error');
+  const r = await fetch('/api/account/change_password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old_password,new_password})});
+  const d = await r.json();
+  if (d.ok) { showAlert('pw-alert','Passwort geändert!','success'); document.getElementById('old-pw').value=''; document.getElementById('new-pw').value=''; document.getElementById('new-pw2').value=''; }
+  else showAlert('pw-alert',d.error,'error');
+}
+
+async function requestDelete() {
+  if (!confirm('Wirklich einen Löschantrag stellen? Ein Super Admin muss diesen bestätigen.')) return;
+  const r = await fetch('/api/account/request_delete',{method:'POST'});
+  const d = await r.json();
+  if (d.ok) showAlert('delete-alert','Löschantrag gestellt. Ein Super Admin wird ihn prüfen.','info');
+  else showAlert('delete-alert',d.error,'error');
+}
+
+// ─── Gesetze ───────────────────────────────────────────
+async function loadLaws() {
+  const r = await fetch('/api/admin/server/settings');
+  const d = await r.json();
+  const lawsEl = document.getElementById('laws-body');
+  const rulesEl = document.getElementById('rules-body');
+  if (!d.ok) { lawsEl.innerHTML='<div class="empty">Fehler beim Laden</div>'; return; }
+  const s = d.data;
+  if (s.laws&&s.laws.length) {
+    lawsEl.innerHTML = s.laws.map((law,i)=>`
+      <div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;gap:12px">
+        <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent);min-width:28px">§${i+1}</span>
+        <span style="font-size:13px">${esc(law)}</span>
+      </div>
+    `).join('');
+  } else {
+    lawsEl.innerHTML = '<div class="empty"><div class="emoji">📜</div>Noch keine Gesetze eingetragen</div>';
+  }
+  if (s.rules) {
+    rulesEl.innerHTML = `<div style="font-size:13px;line-height:1.8;white-space:pre-wrap">${esc(s.rules)}</div>`;
+  } else {
+    rulesEl.innerHTML = '<div class="empty"><div class="emoji">📋</div>Noch keine Regeln eingetragen</div>';
+  }
+}
+
+// ─── Notruf-Aktionen ───────────────────────────────────
+async function updateCallStatus(call_id, status) {
+  const r = await fetch('/api/emergency/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({call_id,status})});
+  const d = await r.json();
+  if (d.ok) { showToast('Status aktualisiert: '+status); await loadEmergencyCalls(); }
+  else showToast(d.error, true);
+}
+
+function showNoteForm(call_id) {
+  const el = document.getElementById('note-form-'+call_id);
+  if (el) el.style.display = el.style.display==='none' ? 'block' : 'none';
+}
+
+async function addCallNote(call_id) {
+  const note = document.getElementById('note-text-'+call_id).value.trim();
+  if (!note) return;
+  const r = await fetch('/api/emergency/note',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({call_id,note})});
+  const d = await r.json();
+  if (d.ok) { showToast('Notiz hinzugefügt!'); await loadEmergencyCalls(); }
+  else showToast(d.error, true);
+}
+
+// ─── Logout ────────────────────────────────────────────
+async function doLogout() {
+  await fetch('/api/auth/logout', {method:'POST'});
+  location.href = '/';
+}
+
+// ─── Helpers ───────────────────────────────────────────
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtDate(s) { if (!s) return '–'; try { return new Date(s).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); } catch { return s; } }
+function callIcon(t) { return {police:'🚓',fire:'🚒',ems:'🚑',all:'🆘'}[t]||'📞'; }
+function showAlert(id, msg, type) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = msg ? `<div class="alert ${type}">${msg}</div>` : '';
+}
+function showToast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show' + (isError?' error-toast':'');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = '', 3000);
+}
+
+init();
+</script>
+</body>
+</html>

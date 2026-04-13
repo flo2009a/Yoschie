@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RP-System – Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111520;
+    --border: #1e2a3a;
+    --accent: #00d4ff;
+    --accent2: #ff4d6d;
+    --text: #c8d8e8;
+    --text-dim: #5a7a9a;
+    --success: #00e676;
+    --warning: #ffd600;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: gridMove 20s linear infinite;
+    z-index: 0;
+  }
+  @keyframes gridMove {
+    from { background-position: 0 0; }
+    to { background-position: 40px 40px; }
+  }
+  .glow-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.15;
+    animation: orbFloat 8s ease-in-out infinite;
+    z-index: 0;
+  }
+  .glow-orb.a { width: 400px; height: 400px; background: var(--accent); top: -100px; left: -100px; }
+  .glow-orb.b { width: 300px; height: 300px; background: var(--accent2); bottom: -80px; right: -80px; animation-delay: -4s; }
+  @keyframes orbFloat {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-30px); }
+  }
+  .container {
+    position: relative; z-index: 1;
+    width: 100%;
+    max-width: 460px;
+    padding: 20px;
+  }
+  .logo-area {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: fadeDown 0.6s ease;
+  }
+  @keyframes fadeDown {
+    from { opacity:0; transform: translateY(-20px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+  .logo-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--accent), #0077ff);
+    color: #000;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 4px;
+    padding: 4px 12px;
+    margin-bottom: 12px;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+  .logo-title {
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    line-height: 1;
+    background: linear-gradient(135deg, #fff 40%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .logo-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 6px;
+    margin-top: 6px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 36px;
+    position: relative;
+    animation: fadeUp 0.6s ease 0.2s both;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(20px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    text-transform: uppercase;
+  }
+  .tab-btn.active {
+    color: var(--accent);
+  }
+  .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+  .form-group { margin-bottom: 20px; }
+  label {
+    display: block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  input {
+    width: 100%;
+    background: #0d1117;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,212,255,0.1); }
+  .btn {
+    width: 100%;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    margin-top: 8px;
+  }
+  .btn:hover { background: #33ddff; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,212,255,0.3); }
+  .btn:active { transform: translateY(0); }
+  .alert {
+    padding: 12px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    margin-bottom: 16px;
+    border-left: 3px solid;
+  }
+  .alert.error { background: rgba(255,77,109,0.1); border-color: var(--accent2); color: var(--accent2); }
+  .alert.success { background: rgba(0,230,118,0.1); border-color: var(--success); color: var(--success); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+</style>
+</head>
+<body>
+<div class="glow-orb a"></div>
+<div class="glow-orb b"></div>
+<div class="container">
+  <div class="logo-area">
+    <div class="logo-badge">ROBLOX RP</div>
+    <div class="logo-title">NEXUS RP</div>
+    <div class="logo-sub">ROLEPLAY SYSTEM</div>
+  </div>
+  <div class="card">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('login')">LOGIN</button>
+      <button class="tab-btn" onclick="switchTab('register')">REGISTER</button>
+    </div>
+    <div id="alert-box"></div>
+
+    <div class="tab-content active" id="tab-login">
+      <div class="form-group">
+        <label>Roblox-Name</label>
+        <input type="text" id="login-name" placeholder="DeinRobloxName" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Passwort</label>
+        <input type="password" id="login-pw" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn" onclick="doLogin()">Einloggen</button>
+    </div>
+
+    <div class="tab-content" id="tab-register">
+      <div class="form-group">
+        <label>Roblox-Name</label>
+        <input type="text" id="reg-name" placeholder="DeinRobloxName" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Passwort</label>
+        <input type="password" id="reg-pw" placeholder="••••••••" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label>Passwort bestätigen</label>
+        <input type="password" id="reg-pw2" placeholder="••••••••" autocomplete="new-password">
+      </div>
+      <button class="btn" onclick="doRegister()">Account erstellen</button>
+    </div>
+  </div>
+</div>
+<script>
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('tab-login').classList.toggle('active', tab==='login');
+  document.getElementById('tab-register').classList.toggle('active', tab==='register');
+  showAlert('','');
+}
+function showAlert(msg, type) {
+  const el = document.getElementById('alert-box');
+  if (!msg) { el.innerHTML=''; return; }
+  el.innerHTML = `<div class="alert ${type}">${msg}</div>`;
+}
+async function doLogin() {
+  const name = document.getElementById('login-name').value.trim();
+  const pw = document.getElementById('login-pw').value;
+  if (!name||!pw) return showAlert('Bitte alle Felder ausfüllen.','error');
+  const r = await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({roblox_name:name,password:pw})});
+  const d = await r.json();
+  if (d.ok) { showAlert('Login erfolgreich!','success'); setTimeout(()=>location.href='/dashboard',800); }
+  else showAlert(d.error,'error');
+}
+async function doRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const pw = document.getElementById('reg-pw').value;
+  const pw2 = document.getElementById('reg-pw2').value;
+  if (!name||!pw) return showAlert('Bitte alle Felder ausfüllen.','error');
+  if (pw!==pw2) return showAlert('Passwörter stimmen nicht überein.','error');
+  if (pw.length<6) return showAlert('Passwort muss mind. 6 Zeichen haben.','error');
+  const r = await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({roblox_name:name,password:pw})});
+  const d = await r.json();
+  if (d.ok) { showAlert('Account erstellt! Du kannst dich jetzt einloggen.','success'); switchTab('login'); document.getElementById('login-name').value=name; }
+  else showAlert(d.error,'error');
+}
+document.addEventListener('keydown', e => { if(e.key==='Enter') { if(document.getElementById('tab-login').classList.contains('active')) doLogin(); else doRegister(); } });
+</script>
+</body>
+</html>
